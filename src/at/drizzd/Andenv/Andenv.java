@@ -17,10 +17,12 @@ import android.widget.LinearLayout;
 
 public class Andenv extends Activity
 {
-    /* Averaging period in seconds. */
-    double avgPeriod = 1.0;
     /* Update rate in multiples per second. */
-    final int updateRate = 2;
+    final int updateRate = 10;
+    /* Averaging period in seconds. */
+    final double avgPeriod = 1.0/updateRate/2.0;
+    /* Graph width in seconds. */
+    final double graphWidth = 20;
 
     private static String TAG = "Andenv";
     final int audioSource = MediaRecorder.AudioSource.MIC;
@@ -41,7 +43,7 @@ public class Andenv extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mChart = new Chart(this);
+        mChart = new Chart(this, graphWidth);
         LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
         layout.addView(mChart.getView());
 
@@ -52,7 +54,7 @@ public class Andenv extends Activity
             return;
         }
         Log.i(TAG, "minimum buffer size: " + bufferSizeInBytes);
-        bufferSizeInBytes = Math.max(2 * readBufferLen * bytesPerSample, bufferSizeInBytes);
+        bufferSizeInBytes = Math.max(readBufferLen * bytesPerSample, bufferSizeInBytes);
         Log.i(TAG, "selected buffer size: " + bufferSizeInBytes);
 
         startRecording();
@@ -76,8 +78,8 @@ public class Andenv extends Activity
         mConsumer = new Thread(new Runnable() {
             public void run() {
                 double timestamp = 0;
-                double avgLen = sampleRate * avgPeriod;
-                double alpha = 2/(avgLen-1);
+                double avgLen = Math.max(1.0, sampleRate * avgPeriod);
+                double alpha = 2/(avgLen+1);
                 double power = 0;
                 short[] readBuffer = new short[readBufferLen];
 
@@ -99,7 +101,6 @@ public class Andenv extends Activity
                         power = alpha * p + (1-alpha) * power;
                     }
 
-                    Log.i(TAG, String.format("power %.1f", 10*Math.log10(power)));
                     runOnUiThread(new updateText(timestamp, power));
                 }
             }

@@ -16,23 +16,22 @@ public class Chart {
     private XYSeries mCurrentSeries;
     private XYSeriesRenderer mCurrentRenderer;
     private Activity mActivity;
+    private double mGraphWidth;
 
-    public Chart(Activity activity) {
+    public Chart(Activity activity, double graphWidth) {
         mActivity = activity;
+        mGraphWidth = graphWidth;
 
         mRenderer.setPanEnabled(false, false);
         mRenderer.setZoomEnabled(false, false);
         mRenderer.setClickEnabled(false);
-        mRenderer.setShowGridY(false);
+        mRenderer.setShowGridX(true);
 
         mCurrentSeries = new XYSeries("Sample Data");
         mDataset.addSeries(mCurrentSeries);
 
         mCurrentRenderer = new XYSeriesRenderer();
         mRenderer.addSeriesRenderer(mCurrentRenderer);
-
-        mCurrentSeries.add(1, 2);
-        mCurrentSeries.add(3, 3);
 
         mChart = ChartFactory.getLineChartView(mActivity, mDataset, mRenderer);
     }
@@ -56,7 +55,14 @@ public class Chart {
 
         public void run() {
             mCurrentSeries.add(mX, mY);
-            mRenderer.setRange(new double[] {mX-100, mX, -70, 0});
+
+            double stepSize = 10;
+            double max = mCurrentSeries.getMaxY();
+            max = stepSize*Math.ceil((max+1)/stepSize);
+            double min = mCurrentSeries.getMinY();
+            min = stepSize*Math.floor((min-1)/stepSize);
+
+            mRenderer.setRange(new double[] {mX-mGraphWidth, mX, min, max});
             mChart.repaint();
         }
     };
