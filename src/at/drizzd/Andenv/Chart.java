@@ -18,7 +18,7 @@ public class Chart {
     private Activity mActivity;
     private double mGraphWidth;
 
-    public Chart(Activity activity, double graphWidth) {
+    public Chart(Activity activity, double graphWidth, String xTitle, String yTitle) {
         mActivity = activity;
         mGraphWidth = graphWidth;
 
@@ -26,6 +26,12 @@ public class Chart {
         mRenderer.setZoomEnabled(false, false);
         mRenderer.setClickEnabled(false);
         mRenderer.setShowGridX(true);
+        if (xTitle != null) {
+            mRenderer.setXTitle(xTitle);
+        }
+        if (yTitle != null) {
+            mRenderer.setYTitle(yTitle);
+        }
 
         mCurrentSeries = new XYSeries("Sample Data");
         mDataset.addSeries(mCurrentSeries);
