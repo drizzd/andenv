@@ -84,8 +84,6 @@ public class Andenv extends Activity
                 short[] readBuffer = new short[readBufferLen];
 
                 while (mActive) {
-                    int lineMax = 70;
-
                     int ret = mAudioRecord.read(readBuffer, 0, readBuffer.length);
                     if (ret < 0) {
                         Log.e(TAG, "AudioRecord.read: " + ret);
