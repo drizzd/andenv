@@ -13,7 +13,7 @@ import android.os.Bundle;
 import android.media.AudioFormat;
 import android.media.MediaRecorder;
 import android.media.AudioRecord;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 
 public class Andenv extends Activity
 {
@@ -23,7 +23,6 @@ public class Andenv extends Activity
     final int updateRate = 2;
 
     private static String TAG = "Andenv";
-    TextView view = null;
     final int audioSource = MediaRecorder.AudioSource.MIC;
     final int sampleRate = 44100;
     final int channelConfig = AudioFormat.CHANNEL_IN_MONO;
@@ -34,6 +33,7 @@ public class Andenv extends Activity
     Thread mConsumer;
     AudioRecord mAudioRecord;
     volatile boolean mActive = true;
+    Chart mChart;
 
     /** Called when the activity is first created. */
     @Override
@@ -41,7 +41,9 @@ public class Andenv extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        view = (TextView)findViewById(R.id.body);
+        mChart = new Chart(this);
+        LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
+        layout.addView(mChart.getView());
 
         bufferSizeInBytes = AudioRecord.getMinBufferSize(
             sampleRate, channelConfig, audioFormat);
@@ -73,6 +75,7 @@ public class Andenv extends Activity
 
         mConsumer = new Thread(new Runnable() {
             public void run() {
+                double timestamp = 0;
                 double avgLen = sampleRate * avgPeriod;
                 double alpha = 2/(avgLen-1);
                 double power = 0;
@@ -88,6 +91,8 @@ public class Andenv extends Activity
                     }
                     int nSamples = ret;
 
+                    timestamp += (double)nSamples/sampleRate;
+
                     for (int i = 0; i < nSamples; i++) {
                         double a = (double)readBuffer[i]/Short.MAX_VALUE;
                         double p = 2 * a * a;
@@ -95,7 +100,7 @@ public class Andenv extends Activity
                     }
 
                     Log.i(TAG, String.format("power %.1f", 10*Math.log10(power)));
-                    runOnUiThread(new updateText(power));
+                    runOnUiThread(new updateText(timestamp, power));
                 }
             }
         });
@@ -103,14 +108,16 @@ public class Andenv extends Activity
     }
 
     class updateText implements Runnable {
+        double mTimestamp;
         double mPower;
 
-        public updateText(double power) {
+        public updateText(double timestamp, double power) {
+            mTimestamp = timestamp;
             mPower = power;
         }
 
         public void run() {
-            view.setText(String.format("power %.1f dB", 10*Math.log10(mPower)));
+            mChart.publishUpdate(mTimestamp, 10*Math.log10(mPower));
         }
     };
 
@@ -126,13 +133,5 @@ public class Andenv extends Activity
             mAudioRecord.stop();
 
         super.onDestroy();
-    }
-
-    private void nap(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (Throwable t) {
-            Log.e(TAG, "Thread.sleep", t);
-        }
     }
 }
