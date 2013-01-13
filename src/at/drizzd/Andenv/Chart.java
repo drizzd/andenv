@@ -18,7 +18,8 @@ public class Chart {
     private Activity mActivity;
     private double mGraphWidth;
 
-    public Chart(Activity activity, double graphWidth, String xTitle, String yTitle) {
+    public Chart(Activity activity, double graphWidth, String curveTitle,
+            String xTitle, String yTitle) {
         mActivity = activity;
         mGraphWidth = graphWidth;
 
@@ -33,7 +34,7 @@ public class Chart {
             mRenderer.setYTitle(yTitle);
         }
 
-        mCurrentSeries = new XYSeries("Sample Data");
+        mCurrentSeries = new XYSeries(curveTitle);
         mDataset.addSeries(mCurrentSeries);
 
         mCurrentRenderer = new XYSeriesRenderer();

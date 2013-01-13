@@ -43,7 +43,7 @@ public class Andenv extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mChart = new Chart(this, graphWidth, "sec", "dB");
+        mChart = new Chart(this, graphWidth, "MIC", "sec", "dB");
         LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
         layout.addView(mChart.getView());
 
