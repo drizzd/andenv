@@ -32,15 +32,16 @@ public class Andenv extends Activity {
     private XYSeriesRenderer mCurrentRenderer;
 
     private void initChart() {
-        mCurrentSeries = new XYSeries("Sample Data");
-        mDataset.addSeries(mCurrentSeries);
-        mCurrentRenderer = new XYSeriesRenderer();
-        mRenderer.addSeriesRenderer(mCurrentRenderer);
-
-        mRenderer.setPanEnabled(false);
-        mRenderer.setZoomEnabled(false);
+        mRenderer.setPanEnabled(false, false);
+        mRenderer.setZoomEnabled(false, false);
         mRenderer.setClickEnabled(false);
         mRenderer.setShowGridY(false);
+
+        mCurrentSeries = new XYSeries("Sample Data");
+        mDataset.addSeries(mCurrentSeries);
+
+        mCurrentRenderer = new XYSeriesRenderer();
+        mRenderer.addSeriesRenderer(mCurrentRenderer);
     }
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,7 @@ public class Andenv extends Activity {
             public void run() {
                 int x = 0;
                 int y = 0;
-                while (mActive && x < 200) {
+                while (mActive) {
                     runOnUiThread(new PublishUpdate(x, y));
                     x++;
                     y = (y + 1) % 50;
@@ -78,6 +79,7 @@ public class Andenv extends Activity {
 
         public void run() {
             mCurrentSeries.add(mX, mY);
+            mRenderer.setRange(new double[] {mX-100, mX, 0, 50});
             mChart.repaint();
         }
     };
