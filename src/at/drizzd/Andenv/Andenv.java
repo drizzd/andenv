@@ -101,26 +101,12 @@ public class Andenv extends Activity
                         power = alpha * p + (1-alpha) * power;
                     }
 
-                    runOnUiThread(new updateText(timestamp, power));
+                    mChart.publishUpdate(timestamp, 10*Math.log10(power));
                 }
             }
         });
         mConsumer.start();
     }
-
-    class updateText implements Runnable {
-        double mTimestamp;
-        double mPower;
-
-        public updateText(double timestamp, double power) {
-            mTimestamp = timestamp;
-            mPower = power;
-        }
-
-        public void run() {
-            mChart.publishUpdate(mTimestamp, 10*Math.log10(mPower));
-        }
-    };
 
     public void onDestroy() {
         mActive = false;
