@@ -1,5 +1,10 @@
 package at.drizzd.Andenv;
 
+import java.lang.Thread;
+import java.lang.String;
+import java.lang.Integer;
+
+import android.util.Log;
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.LinearLayout;
@@ -12,6 +17,10 @@ import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
 public class Andenv extends Activity {
+    private static String TAG = "Andenv";
+    volatile boolean mActive = true;
+    Thread mGenerator;
+
     private GraphicalView mChart;
 
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
@@ -27,31 +36,67 @@ public class Andenv extends Activity {
         mDataset.addSeries(mCurrentSeries);
         mCurrentRenderer = new XYSeriesRenderer();
         mRenderer.addSeriesRenderer(mCurrentRenderer);
-    }
 
-    private void addSampleData() {
-        mCurrentSeries.add(1, 2);
-        mCurrentSeries.add(2, 3);
-        mCurrentSeries.add(3, 2);
-        mCurrentSeries.add(4, 5);
-        mCurrentSeries.add(5, 4);
+        mRenderer.setPanEnabled(false);
+        mRenderer.setZoomEnabled(false);
+        mRenderer.setClickEnabled(false);
+        mRenderer.setShowGridY(false);
     }
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
+        initChart();
+        mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
+        layout.addView(mChart);
+
+        mGenerator = new Thread(new Runnable() {
+            public void run() {
+                int x = 0;
+                int y = 0;
+                while (mActive && x < 200) {
+                    runOnUiThread(new PublishUpdate(x, y));
+                    x++;
+                    y = (y + 1) % 50;
+                    sleep(50);
+                }
+            }
+        });
+        mGenerator.start();
     }
 
-    protected void onResume() {
-        super.onResume();
-        LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-        if (mChart == null) {
-            initChart();
-            addSampleData();
-            mChart = ChartFactory.getCubeLineChartView(this, mDataset, mRenderer, 0.3f);
-            layout.addView(mChart);
-        } else {
+    class PublishUpdate implements Runnable {
+        double mX;
+        double mY;
+
+        public PublishUpdate(double x, double y) {
+            mX = x;
+            mY = y;
+        }
+
+        public void run() {
+            mCurrentSeries.add(mX, mY);
             mChart.repaint();
+        }
+    };
+
+    public void onDestroy() {
+        mActive = false;
+        try {
+            mGenerator.join();
+        } catch (Throwable t) {
+            Log.wtf(TAG, t);
+        }
+        super.onDestroy();
+    }
+
+    private void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (Throwable t) {
+            Log.wtf(TAG, t);
         }
     }
 }
